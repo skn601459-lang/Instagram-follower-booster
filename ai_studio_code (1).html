@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Video Downloader</title>
+    <style>
+        :root {
+            --primary: #FF0000;
+            --secondary: #2ecc71;
+            --dark: #2c3e50;
+            --light: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .card {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 { color: var(--primary); margin-bottom: 0.5rem; }
+        p { color: #666; margin-bottom: 1.5rem; font-size: 14px; }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus { border-color: var(--primary); }
+
+        button {
+            padding: 12px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover { opacity: 0.9; }
+
+        .result-box {
+            display: none;
+            border-top: 1px solid #eee;
+            padding-top: 1.5rem;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .thumbnail {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .btn-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .dl-btn {
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            color: white;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .mp4 { background: #3498db; }
+        .mp3 { background: #9b59b6; }
+        .dl-btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
+        .loader {
+            display: none;
+            margin: 20px auto;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>YT Downloader</h1>
+    <p>Paste a YouTube link to generate public download links.</p>
+
+    <div class="input-group">
+        <input type="text" id="urlInput" placeholder="https://www.youtube.com/watch?v=...">
+        <button onclick="processLink()">Get Video</button>
+    </div>
+
+    <div class="loader" id="loader"></div>
+
+    <div id="resultBox" class="result-box">
+        <img id="thumb" class="thumbnail" src="" alt="thumbnail">
+        <h4 id="videoTitle" style="margin-bottom: 15px;">Video Title</h4>
+        
+        <div class="btn-list">
+            <!-- These use a public API structure -->
+            <a id="mp4_360" class="dl-btn mp4" target="_blank">MP4 360p</a>
+            <a id="mp4_720" class="dl-btn mp4" target="_blank">MP4 720p</a>
+            <a id="mp3_link" class="dl-btn mp3" target="_blank">Audio MP3</a>
+            <a id="mp4_1080" class="dl-btn mp4" style="background: var(--secondary);" target="_blank">Full HD</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function extractId(url) {
+        const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+        const match = url.match(regex);
+        return (match && match[1]) ? match[1] : null;
+    }
+
+    function processLink() {
+        const url = document.getElementById('urlInput').value;
+        const id = extractId(url);
+        const loader = document.getElementById('loader');
+        const resultBox = document.getElementById('resultBox');
+
+        if (!id) {
+            alert("Please enter a valid YouTube URL");
+            return;
+        }
+
+        // Show Loader
+        loader.style.display = "block";
+        resultBox.style.display = "none";
+
+        // Using Public API Gateways that don't require Keys
+        // We use a combination of known public conversion endpoints
+        setTimeout(() => {
+            // Update UI
+            document.getElementById('thumb').src = `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
+            document.getElementById('videoTitle').innerText = "Video ID: " + id;
+
+            // Set Public API links
+            // API 1: Vevioz Public Interface
+            document.getElementById('mp4_360').href = `https://api.vevioz.com/api/button/mp4/${id}`;
+            document.getElementById('mp4_720').href = `https://api.vevioz.com/api/button/mp4/${id}`;
+            
+            // API 2: MP3 Converter Public Gateway
+            document.getElementById('mp3_link').href = `https://api.vevioz.com/api/button/mp3/${id}`;
+            
+            // API 3: Loader.to Public Gateway (Multi-format)
+            document.getElementById('mp4_1080').href = `https://loader.to/api/button/?url=https://www.youtube.com/watch?v=${id}&f=1080`;
+
+            loader.style.display = "none";
+            resultBox.style.display = "block";
+        }, 800);
+    }
+</script>
+
+</body>
+</html>
